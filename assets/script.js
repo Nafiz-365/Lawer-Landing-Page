@@ -1,61 +1,83 @@
 document.addEventListener('DOMContentLoaded', () => {
-    // Hamburger Menu
     const hamburger = document.querySelector('.hamburger');
     const navMenu = document.querySelector('.nav-menu');
-
-    hamburger.addEventListener('click', () => {
-        hamburger.classList.toggle('active');
-        navMenu.classList.toggle('active');
-        
-        // Toggle icon between bars and times (close)
-        const icon = hamburger.querySelector('i');
-        if (hamburger.classList.contains('active')) {
-            icon.classList.remove('fa-bars');
-            icon.classList.add('fa-xmark');
-        } else {
-            icon.classList.remove('fa-xmark');
-            icon.classList.add('fa-bars');
-        }
-    });
-
-    document.querySelectorAll('.nav-menu ul li a').forEach(n => n.addEventListener('click', () => {
-        hamburger.classList.remove('active');
-        navMenu.classList.remove('active');
-        const icon = hamburger.querySelector('i');
-        icon.classList.remove('fa-xmark');
-        icon.classList.add('fa-bars');
-    }));
-
-    // Sticky Header
+    const navOverlay = document.querySelector('.nav-overlay');
     const header = document.querySelector('.header-area');
-    window.addEventListener('scroll', () => {
-        if (window.scrollY > 50) {
-            header.classList.add('sticky');
-        } else {
-            header.classList.remove('sticky');
-        }
-    });
 
-    // Scroll Animations using Intersection Observer
+    if (hamburger && navMenu) {
+        const updateMenuState = (isOpen) => {
+            hamburger.classList.toggle('active', isOpen);
+            navMenu.classList.toggle('active', isOpen);
+            hamburger.setAttribute('aria-expanded', String(isOpen));
+            document.body.classList.toggle('menu-open', isOpen);
+
+            if (navOverlay) {
+                navOverlay.classList.toggle('active', isOpen);
+            }
+
+            const icon = hamburger.querySelector('i');
+            if (icon) {
+                icon.classList.toggle('fa-bars', !isOpen);
+                icon.classList.toggle('fa-xmark', isOpen);
+            }
+        };
+
+        hamburger.addEventListener('click', () => {
+            const isOpen = !hamburger.classList.contains('active');
+            updateMenuState(isOpen);
+        });
+
+        if (navOverlay) {
+            navOverlay.addEventListener('click', () => updateMenuState(false));
+        }
+
+        document
+            .querySelectorAll('.nav-menu ul li a, .nav-cta')
+            .forEach((link) => {
+                link.addEventListener('click', () => updateMenuState(false));
+            });
+
+        document.addEventListener('keydown', (event) => {
+            if (
+                event.key === 'Escape' &&
+                hamburger.classList.contains('active')
+            ) {
+                updateMenuState(false);
+            }
+        });
+    }
+
+    if (header) {
+        window.addEventListener('scroll', () => {
+            if (window.scrollY > 50) {
+                header.classList.add('sticky');
+            } else {
+                header.classList.remove('sticky');
+            }
+        });
+    }
+
     const observerOptions = {
         root: null,
         rootMargin: '0px',
-        threshold: 0.1
+        threshold: 0.12,
     };
 
     const observer = new IntersectionObserver((entries, observer) => {
-        entries.forEach(entry => {
+        entries.forEach((entry) => {
             if (entry.isIntersecting) {
                 entry.target.classList.add('fade-in-up');
-                observer.unobserve(entry.target); // Only animate once
+                observer.unobserve(entry.target);
             }
         });
     }, observerOptions);
 
-    const animatedElements = document.querySelectorAll('.hero-text, .hero-img, .services-text, .single-service-1, .single-service-2, .single-service-3, .single-service-4, .stat, .single-testimonial, .question-details, .question-img');
-    
-    animatedElements.forEach(el => {
-        el.classList.add('hidden-element');
-        observer.observe(el);
+    const animatedElements = document.querySelectorAll(
+        '.hero-text, .hero-panel, .single-service, .why-item, .single-stat, .single-testimonial, .question-details, .question-img',
+    );
+
+    animatedElements.forEach((element) => {
+        element.classList.add('hidden-element');
+        observer.observe(element);
     });
 });
